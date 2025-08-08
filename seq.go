@@ -1,6 +1,10 @@
 package util
 
-import "iter"
+import (
+	"iter"
+
+	"golang.org/x/exp/constraints"
+)
 
 func Map[T, R any](seq iter.Seq[T], iteratee func(item T) R) iter.Seq[R] {
 	return func(yield func(R) bool) {
@@ -60,6 +64,52 @@ func Filter2[K, V any](seq iter.Seq2[K, V], predicate func(k K, v V) bool) iter.
 				if !yield(k, v) {
 					return
 				}
+			}
+		}
+	}
+}
+
+func Range[T constraints.Integer | constraints.Float](elementNum int) iter.Seq[T] {
+	return RangeFrom[T](0, elementNum)
+}
+
+func RangeFrom[T constraints.Integer | constraints.Float](start T, elementNum int) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		length := Abs(elementNum)
+		step := 1
+		if elementNum < 0 {
+			step = -1
+		}
+		for i, j := 0, start; i < length; i, j = i+1, j+T(step) {
+			if !yield(j) {
+				return
+			}
+		}
+	}
+}
+
+func RangeWithSteps[T constraints.Integer | constraints.Float](start, end, step T) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		if start == end || step == 0 {
+			return
+		}
+		if start < end {
+			if step < 0 {
+				return
+			}
+			for i := start; i < end; i += step {
+				if !yield(i) {
+					return
+				}
+			}
+			return
+		}
+		if step > 0 {
+			return
+		}
+		for i := start; i > end; i += step {
+			if !yield(i) {
+				return
 			}
 		}
 	}
