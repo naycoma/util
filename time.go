@@ -46,7 +46,7 @@ func Clock(t time.Time) time.Duration {
 //
 //	DayOfWeekInWeek(2025-01-08 (Wednesday), Monday) = 2
 func DayOfWeekInWeek(t time.Time, startOfWeek time.Weekday) int {
-	return PositiveMod(int(t.Weekday()) - int(startOfWeek), 7)
+	return PositiveMod(int(t.Weekday())-int(startOfWeek), 7)
 }
 
 // Deprecated: Use time.Time.ISOWeek() instead.
@@ -73,12 +73,12 @@ func WeekOfMonth(t time.Time, startOfWeek time.Weekday) int {
 
 	// Calculate the number of weeks from weekStartOfMonth1 to weekStartOfT
 	// This assumes weekStartOfMonth1 is the start of Week 1.
-			return DaysBetween(weekStartOfMonth1, weekStartOfT)/7 + 1
+	return DaysBetween(weekStartOfMonth1, weekStartOfT)/7 + 1
 }
 
 // getWeekStartDate returns the date of the 'startOfWeek' for the week containing 't'.
 func getWeekStartDate(t time.Time, startOfWeek time.Weekday) time.Time {
-	daysToSubtract := PositiveMod(int(t.Weekday()) - int(startOfWeek), 7)
+	daysToSubtract := PositiveMod(int(t.Weekday())-int(startOfWeek), 7)
 	return t.AddDate(0, 0, -daysToSubtract)
 }
 
@@ -130,4 +130,64 @@ func TimeRange(times []time.Time) time.Duration {
 		}
 	}
 	return max.Sub(min)
+}
+
+// Future reports whether t is after time.Now().
+// It is shorthand for t.After(time.Now()).
+func Future(t time.Time) bool {
+	return t.After(time.Now())
+}
+
+// Past reports whether t is before time.Now().
+// It is shorthand for t.Before(time.Now()).
+func Past(t time.Time) bool {
+	return t.Before(time.Now())
+}
+
+const (
+	HalfHour   = 30 * time.Minute
+	HalfSecond = 500 * time.Millisecond
+)
+
+// TimeMod returns the remainder of t divided by d.
+//
+// This function uses standard UTC-based truncation.
+func TimeMod(t time.Time, d time.Duration) time.Duration {
+	return t.Sub(t.Truncate(d))
+}
+
+// TimeModLocal returns the remainder of t divided by d in the time's local timezone.
+func TimeModLocal(t time.Time, d time.Duration) time.Duration {
+	return t.Sub(TruncateLocal(t, d))
+}
+
+// TimeDivMod divides a time t by a duration d, returning the quotient and remainder.
+//
+// This function uses standard UTC-based truncation.
+func TimeDivMod(t time.Time, d time.Duration) (div time.Time, mod time.Duration) {
+	div = t.Truncate(d)
+	mod = t.Sub(div)
+	return
+}
+
+// TimeDivModLocal divides a time t by a duration d in the time's local timezone,
+// returning the quotient and remainder.
+func TimeDivModLocal(t time.Time, d time.Duration) (div time.Time, mod time.Duration) {
+	div = TruncateLocal(t, d)
+	mod = t.Sub(div)
+	return
+}
+
+// TimeNear calculates how close a time t is to the nearest boundary of duration d.
+// It returns 0 if t is on a boundary and d/2 if t is exactly in the middle.
+//
+// This function uses standard UTC-based truncation.
+func TimeNear(t time.Time, d time.Duration) time.Duration {
+	return (TimeMod(t.Add(d/2), d) - d/2).Abs()
+}
+
+// TimeNearLocal calculates how close a time t is to the nearest boundary of duration d in the time's local timezone.
+// It returns 0 if t is on a boundary and d/2 if t is exactly in the middle.
+func TimeNearLocal(t time.Time, d time.Duration) time.Duration {
+	return (TimeModLocal(t.Add(d/2), d) - d/2).Abs()
 }

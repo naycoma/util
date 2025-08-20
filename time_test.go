@@ -146,3 +146,16 @@ func TestWeekOfMonth(t *testing.T) {
 	// 2025-08-09 (土) -> 2025-08-03 (日) が週の始まり
 	a.Equal(2, util.WeekOfMonth(timeAug9, time.Sunday), "Aug 9, Sunday start")
 }
+
+func TestFuturePast(t *testing.T) {
+	a := assert.New(t)
+
+	futureTime := time.Now().Add(1 * time.Hour)
+	pastTime := time.Now().Add(-1 * time.Hour)
+
+	a.True(util.Future(futureTime))
+	a.False(util.Future(pastTime))
+
+	a.False(util.Past(futureTime))
+	a.True(util.Past(pastTime))
+}
