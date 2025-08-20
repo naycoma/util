@@ -8,6 +8,11 @@ import (
 	"github.com/naycoma/util"
 )
 
+
+type MyInt int
+type MyFloat float64
+type MyBool bool
+
 type Interface interface {
 	Test()
 }

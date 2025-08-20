@@ -8,9 +8,6 @@ import (
 	"github.com/naycoma/util"
 )
 
-type MyInt int
-type MyBool bool
-
 func TestCompare(t *testing.T) {
 	a := assert.New(t)
 	a.True(util.Compare(1, 2) < 0)
