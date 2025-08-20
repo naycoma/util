@@ -17,15 +17,29 @@ func DivMod[I constraints.Integer](n, d I) (q, r I) {
 	return n / d, n % d
 }
 
-// PositiveMod returns the result of the modulo operation, ensuring the result is always non-negative.
-// For example, PositiveMod(-5, 3) returns 1, while -5 % 3 returns -2.
-func PositiveMod[N constraints.Integer](n, d N) N {
-	return (n%d + d) % d
+// PositiveMod computes the true mathematical modulo of x/d, which is always non-negative.
+// It handles both integer and float types efficiently.
+// For example, PositiveMod(-5, 3) returns 1.
+func PositiveMod[R constraints.Integer | constraints.Float](x, d R) R {
+	// Use a type switch on a zero value of type R to determine if we are working with floats or integers.
+	var zero R
+	switch any(zero).(type) {
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, uintptr:
+		return R((int64(x)%int64(d) + int64(d)) % int64(d))
+	default:
+		x_f64 := float64(x)
+		d_f64 := float64(d)
+		res := math.Mod(x_f64, d_f64)
+		if res < 0 {
+			res += d_f64
+		}
+		return R(res)
+	}
 }
 
 // SubUnsigned performs subtraction for unsigned integers, preventing underflow.
 // If a is less than b, it returns 0 instead of a negative result that would wrap around to a large positive number.
-func SubUnsigned[T constraints.Unsigned](a, b T) T {
+func SubUnsigned[N constraints.Unsigned](a, b N) N {
 	if a > b {
 		return a - b
 	}
@@ -70,7 +84,7 @@ func Round[I constraints.Integer, F constraints.Float](x F) I {
 
 // Abs returns the absolute value of x.
 // It supports generic Integer and Float types.
-func Abs[T constraints.Signed | constraints.Float](x T) T {
+func Abs[R constraints.Signed | constraints.Float](x R) R {
 	if x < 0 {
 		return -x
 	}
@@ -99,4 +113,19 @@ func Trunc[I constraints.Integer, F constraints.Float](x F) I {
 //	RoundToEven(NaN) = NaN
 func RoundToEven[I constraints.Integer, F constraints.Float](x F) I {
 	return I(math.RoundToEven(float64(x)))
+}
+
+// Repeat attempts to wrap the value x into the range [start, end).
+//
+// It computes the result based on `math.Mod(x - start, end - start) + start`.
+// Due to the behavior of `math.Mod`, if `x` is already less than `start`,
+// the function may return a value outside the desired range.
+// For a behavior that correctly wraps all values into the range, see `Wrap`.
+//
+// Examples:
+//  Repeat(12, 0, 10) returns 2
+//  Repeat(5, 0, 10) returns 5
+//  Repeat(3, 5, 10) returns 3 (note: not wrapped into [5, 10))
+func Repeat[R constraints.Integer | constraints.Float](x, start, end R) R {
+	return R(math.Mod(float64(x)-float64(start), float64(end)-float64(start)) + float64(start))
 }
